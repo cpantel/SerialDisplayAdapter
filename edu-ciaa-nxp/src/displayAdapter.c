@@ -111,9 +111,11 @@ int main( void )
 
       if ( uartReadByte( UART_USB, (uint8_t * )&data[0] ) ){
 
+         if (data[0] == '#' && state != SEEK ) {
+           state = SEEK;
+         }
 
          switch (state) {
-
            case SEEK:
              if (data[0] == '#') {
                lcdClearAndHome();
