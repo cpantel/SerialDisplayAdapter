@@ -2,7 +2,6 @@
    Copyright 2020, Carlos Pantelides.
    All rights reserved.
 
-This file is part sAPI library for microcontrollers.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are met:
@@ -69,8 +68,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "sapi.h"
 
-#define BAUDRATE_USB 115200
-#define BAUDRATE_232 9600
+#define BAUDRATE_USB 19200
+#define BAUDRATE_232 19200
+
 
 
 typedef enum {SEEK, SEEKT1, READT1, SEEKH1, READH1, SEEKT2, READT2, SEEKH2, READH2, SEEKCS, READCS } States;
@@ -92,25 +92,58 @@ int main( void )
 
    lcdInit( 16, 2, 5, 8 );
 
+   bool ledRS232 = OFF;
+   bool ledUSB   = OFF;
 
    char data[]  = { 0x0,0x0 };
    char space[] = { 0x20,0x0 };
    char dot[]   = { '.',0x0 };
 
-   uartWriteString(UART_USB,"Display Adapter\n");
+   for ( int i = 0; i<10; ++i) {
+     gpioWrite( LED1, ON );
+     gpioWrite( LED2, OFF);
+     delay(100);
+     gpioWrite( LED1, OFF );
+     gpioWrite( LED2, ON);
+     delay(100);
+
+
+   }
+
+   uartWriteString(UART_USB,"Display Adapter V 1.0\n");
 
    lcdCursorSet( LCD_CURSOR_OFF );
    lcdClearAndHome();
    lcdSendStringRaw("Seeking...");
 
 
-
-
    // ---------- REPETIR POR SIEMPRE --------------------------
    while( TRUE ) {
 
       if ( uartReadByte( UART_USB, (uint8_t * )&data[0] ) ){
+         if ( ledUSB == ON) {
+            gpioWrite( LED1, ON );
+            ledUSB = OFF;
+         } else {
+            gpioWrite( LED1, OFF );
+            ledUSB = ON;
+         }
 
+         // echo
+         uartWriteByte( UART_USB, data[0] );
+         uartWriteByte( UART_232, data[0] );
+     }
+
+      if(  uartReadByte( UART_232, (uint8_t * )&data[0] ) ){
+         if (ledRS232 == ON) {
+            gpioWrite( LED2, ON );
+            ledRS232 = OFF;
+         } else {
+            gpioWrite( LED2, OFF);
+            ledRS232 = ON;
+         } 
+ 
+//         lcdSendStringRaw(dot);
          if (data[0] == '#' && state != SEEK ) {
            state = SEEK;
          }
@@ -190,10 +223,7 @@ int main( void )
 
            break;
          }
-         uartWriteByte( UART_232, data[0] );
-      }
 
-      if(  uartReadByte( UART_232, (uint8_t * )&data[0] ) ){
          uartWriteByte( UART_USB, data[0] );
       }
    }
