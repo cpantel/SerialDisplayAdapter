@@ -80,7 +80,7 @@ int main( void )
    char lcdOut0[22];
    char lcdOut1[22];
    int idx;
-
+   bool blink = false;
 
    States state;
    state = SEEK;
@@ -91,6 +91,9 @@ int main( void )
    uartConfig( UART_232, BAUDRATE_232 );
 
    lcdInit( 16, 2, 5, 8 );
+
+   dht11Init( GPIO0 ); // Inicializo el sensor DHT11
+
 
    bool ledRS232 = OFF;
    bool ledUSB   = OFF;
@@ -166,12 +169,21 @@ int main( void )
                buffer[idx + 3] = 0;
                sscanf(buffer,"{ \"T1\" : \"%f\", \"H1\" : \"%f\", \"T2\" : \"%f\", \"H2\" : \"%f\", \"CS\" : \"%d\", \"R1\" : \"%d\", \"R2\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", &t1, &h1, &t2, &h2, &cs, &temp_ref_1, &temp_ref_2, &weight_1, &weight_2, &decrement_2, &decrement_1, &decrement_0, &increment_1, &increment_2, &increment_3, &min_speed, &scale, &delta_eq, &sample_interval);
 
+
+               if( dht11Read(&h3, &t3) ) {
+
+
+               }
+
                sprintf(buffer,"{ \"CS\" : \"%d\", \"T1\" : \"%.2f\", \"H1\" : \"%.2f\", \"T2\" : \"%.2f\", \"H2\" : \"%.2f\", \"T3\" : \"%.2f\", \"H3\" : \"%.2f\", \"R1\" : \"%d\", \"R2\" : \"%d\", \"R3\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"W3\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", cs, t1, h1, t2, h2, t3, h3, temp_ref_1, temp_ref_2, temp_ref_3, weight_1, weight_2,weight_3, decrement_2, decrement_1, decrement_0, increment_1, increment_2, increment_3, min_speed, scale, delta_eq, sample_interval);
 
                uartWriteString( UART_USB, buffer);
+               blink = ! blink;
+               char blink_c;
+               blink_c = blink ? '#' : '@';
 
-               sprintf(lcdOut0, "%d %.1f %.1f\0", cs,t1,t2);
-               sprintf(lcdOut1, "    %d   %d\0", temp_ref_1, temp_ref_2);
+               sprintf(lcdOut0, "%.1f %.1f %.1f\0", t1,t2,t3);
+               sprintf(lcdOut1, "%d   %d   %d   %c\0",  temp_ref_1, temp_ref_2, cs, blink_c);
 
                lcdClearAndHome();
                lcdSendStringRaw(lcdOut0);
