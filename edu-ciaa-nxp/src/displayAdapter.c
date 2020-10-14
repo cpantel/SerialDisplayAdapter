@@ -161,20 +161,9 @@ int main( void )
            break;
            case READ:
              if (data[0] == '}') {
-               buffer[idx + 1] = ',';
-               buffer[idx + 2] = ' ';
-               buffer[idx + 3] = '"';
-               buffer[idx + 4] = 'E';
-               buffer[idx + 5] = 'T';
-               buffer[idx + 6] = '"';
-               buffer[idx + 7] = ':';
-               buffer[idx + 8] = '"';
-               buffer[idx + 9] = '0';
-               buffer[idx + 10] = '0';
-               buffer[idx + 11] = '"';
-
-               buffer[idx + 13] = 0x0d;
-               buffer[idx + 14] = 0;
+               buffer[idx + 1] = '}';
+               buffer[idx + 2] = 0x0d;
+               buffer[idx + 3] = 0;
                sscanf(buffer,"{ \"T1\" : \"%f\", \"H1\" : \"%f\", \"T2\" : \"%f\", \"H2\" : \"%f\", \"CS\" : \"%d\", \"R1\" : \"%d\", \"R2\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", &t1, &h1, &t2, &h2, &cs, &temp_ref_1, &temp_ref_2, &weight_1, &weight_2, &decrement_2, &decrement_1, &decrement_0, &increment_1, &increment_2, &increment_3, &min_speed, &scale, &delta_eq, &sample_interval);
 
                sprintf(buffer,"{ \"CS\" : \"%d\", \"T1\" : \"%.2f\", \"H1\" : \"%.2f\", \"T2\" : \"%.2f\", \"H2\" : \"%.2f\", \"T3\" : \"%.2f\", \"H3\" : \"%.2f\", \"R1\" : \"%d\", \"R2\" : \"%d\", \"R3\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"W3\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", cs, t1, h1, t2, h2, t3, h3, temp_ref_1, temp_ref_2, temp_ref_3, weight_1, weight_2,weight_3, decrement_2, decrement_1, decrement_0, increment_1, increment_2, increment_3, min_speed, scale, delta_eq, sample_interval);
@@ -182,7 +171,7 @@ int main( void )
                uartWriteString( UART_USB, buffer);
 
                sprintf(lcdOut0, "%d %.1f %.1f\0", cs,t1,t2);
-               sprintf(lcdOut1, "   %.1f %.1f\0", temp_ref_1, temp_ref_2);
+               sprintf(lcdOut1, "    %d   %d\0", temp_ref_1, temp_ref_2);
 
                lcdClearAndHome();
                lcdSendStringRaw(lcdOut0);
