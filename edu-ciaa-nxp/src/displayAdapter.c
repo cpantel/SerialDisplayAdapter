@@ -31,37 +31,8 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 // First version date: 2020-07-12
+// Second version date: 2020-10-12
 
-/*
-
-  FSM
-
-  seek    #    seekT1              lcdClearAndHome();
-  seekT1  :    readT1
-
-  readT1  ,    seekH1 (print ' ')  lcdSendStringRaw(space);
-  readT1  *    (print it)          lcdSendStringRaw(data);
-
-  seekH1  :    readH1
-
-  readH1  ,    seekT2               lcdGoToXY( 0, 1 );
-  readH1  *    (print it)           lcdSendStringRaw(data);
-
-  seekT2  :    readT2
-
-  readT2  ,    seekH2 (print ' ')   lcdSendStringRaw(space);
-  readT2  *    (print it)           lcdSendStringRaw(data);
-
-  seekH2  :    readH2
-
-  readH2  ,    seekCS (print ' ')   lcdSendStringRaw(space);
-  readH2  *    (print it)           lcdSendStringRaw(data);
-
-  seekCS  :    readCS
-
-  readCS  eol  seek,
-  readCS  *    (print it)           lcdSendStringRaw(data);
-*/
 
 
 /*===========================================================================*/
@@ -70,17 +41,40 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #define BAUDRATE_USB 19200
 #define BAUDRATE_232 19200
+#define BUFFER_SIZE   1024
 
 
-
-typedef enum {SEEK, SEEKT1, READT1, SEEKH1, READH1, SEEKT2, READT2, SEEKH2, READH2, SEEKCS, READCS } States;
-
+typedef enum {SEEK, READ } States;
 
 
 
 int main( void )
 {
-   // ---------- CONFIGURACIONES ------------------------------
+   float t1 = 0;
+   float t2 = 0;
+   float h1 = 0;
+   float h2 = 0;
+   int cs = 0;
+   int temp_ref_1 = 0;
+   int temp_ref_2 = 0;
+   int weight_1 = 0;
+   int weight_2 = 0;
+   int decrement_2 = 0;
+   int decrement_1 = 0;
+   int decrement_0 = 0;
+   int increment_1 = 0;
+   int increment_2 = 0;
+   int increment_3 = 0;
+   int min_speed = 0;
+   int scale = 0;
+   int delta_eq = 0;
+   int sample_interval = 0;
+
+   char buffer[BUFFER_SIZE];
+   char lcdOut0[22];
+   char lcdOut1[22];
+   uint8_t idx;
+
 
    States state;
    state = SEEK;
@@ -110,7 +104,7 @@ int main( void )
 
    }
 
-   uartWriteString(UART_USB,"Display Adapter V 1.0\n");
+   uartWriteString(UART_USB,"Display Adapter V 2.0\n");
 
    lcdCursorSet( LCD_CURSOR_OFF );
    lcdClearAndHome();
@@ -141,8 +135,8 @@ int main( void )
          } else {
             gpioWrite( LED2, OFF);
             ledRS232 = ON;
-         } 
- 
+         }
+
 //         lcdSendStringRaw(dot);
          if (data[0] == '#' && state != SEEK ) {
            state = SEEK;
@@ -150,81 +144,43 @@ int main( void )
 
          switch (state) {
            case SEEK:
-             if (data[0] == '#') {
+             if (data[0] == '{') {
+               idx = 0;
+               buffer[idx] = data[0];
+               state = READ;
+             } else {
+               uartWriteByte( UART_USB, data[0] );
+             }
+           break;
+           case READ:
+             if (data[0] == '}') {
+               buffer[idx + 1] = data[0];
+               buffer[idx + 2] = 0x0d;
+               buffer[idx + 3] = 0;
+               sscanf(buffer,"{ \"T1\" : \"%f\", \"H1\" : \"%f\", \"T2\" : \"%f\", \"H2\" : \"%f\", \"CS\" : \"%d\",  \"R1\" : \"%d\", \"R2\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", &t1, &h1, &t2, &h2, &cs, &temp_ref_1, &temp_ref_2, &weight_1, &weight_2, &decrement_2, &decrement_1, &decrement_0, &increment_1, &increment_2, &increment_3, &min_speed, &scale, &delta_eq, &sample_interval);
+
+               uartWriteString( UART_USB, buffer);
+
+               sprintf(lcdOut0, "%d %.1f %.1f\0", cs,t1,t2);
+               sprintf(lcdOut1, "   %.1f %.1f\0", temp_ref_1, temp_ref_2);
+
                lcdClearAndHome();
-               state = SEEKT1;
-             }
-           break;
-           case SEEKT1:
-             if (data[0] == ':') {
-               state = READT1;
-             }
-           break;
-           case READT1:
-             if (data[0] == ',') {
-               lcdSendStringRaw(space);
-               state = SEEKH1;
-             } else {
-               lcdSendStringRaw(data);
-             }
-           break;
-           case SEEKH1:
-             if (data[0] == ':') {
-               state = READH1;
-             }
-           break;
-           case READH1:
-             if (data[0] == ',') {
+               lcdSendStringRaw(lcdOut0);
                lcdGoToXY( 0, 1 );
-               state = SEEKT2;
-             } else {
-               lcdSendStringRaw(data);
-             }
-           break;
-           case SEEKT2:
-             if (data[0] == ':') {
-               state = READT2;
-             }
-           break;
-           case READT2:
-             if (data[0] == ',') {
-               lcdSendStringRaw(space);
-               state = SEEKH2;
-             } else {
-               lcdSendStringRaw(data);
-             }
-           break;
-           case SEEKH2:
-             if (data[0] == ':') {
-               state = READH2;
-             }
-           break;
-           case READH2:
-             if (data[0] == ',') {
-               lcdSendStringRaw(space);
-               state = SEEKCS;
-             } else {
-               lcdSendStringRaw(data);
-             }
-           break;
-           case SEEKCS:
-             if (data[0] == ':') {
-               state = READCS;
-             }
-           break;
-           case READCS:
-             if (data[0] == 0x0d || data[0] == 0x0a ) {
+               lcdSendStringRaw(lcdOut1);
+
                state = SEEK;
              } else {
-               lcdSendStringRaw(data);
+               ++idx;
+               buffer[idx] = data[0];
              }
            break;
-           default:
+          default:
 
            break;
          }
 
-         uartWriteByte( UART_USB, data[0] );
+
       }
    }
    return 0;
