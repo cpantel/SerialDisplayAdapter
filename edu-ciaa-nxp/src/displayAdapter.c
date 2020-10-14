@@ -31,7 +31,7 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 // First version date: 2020-07-12
-// Second version date: 2020-10-12
+// Second version date: 2020-10-14
 
 
 
@@ -52,13 +52,19 @@ int main( void )
 {
    float t1 = 0;
    float t2 = 0;
+   float t3 = 0;
+
    float h1 = 0;
    float h2 = 0;
+   float h3 = 0;
+
    int cs = 0;
    int temp_ref_1 = 0;
    int temp_ref_2 = 0;
+   int temp_ref_3 = 0;
    int weight_1 = 0;
    int weight_2 = 0;
+   int weight_3 = 0;
    int decrement_2 = 0;
    int decrement_1 = 0;
    int decrement_0 = 0;
@@ -73,7 +79,7 @@ int main( void )
    char buffer[BUFFER_SIZE];
    char lcdOut0[22];
    char lcdOut1[22];
-   uint8_t idx;
+   int idx;
 
 
    States state;
@@ -129,6 +135,8 @@ int main( void )
      }
 
       if(  uartReadByte( UART_232, (uint8_t * )&data[0] ) ){
+/*        uartWriteByte( UART_USB, data[0] );
+      } else if (0) {*/
          if (ledRS232 == ON) {
             gpioWrite( LED2, ON );
             ledRS232 = OFF;
@@ -137,8 +145,7 @@ int main( void )
             ledRS232 = ON;
          }
 
-//         lcdSendStringRaw(dot);
-         if (data[0] == '#' && state != SEEK ) {
+         if (data[0] == '{' && state != SEEK ) {
            state = SEEK;
          }
 
@@ -154,10 +161,23 @@ int main( void )
            break;
            case READ:
              if (data[0] == '}') {
-               buffer[idx + 1] = data[0];
-               buffer[idx + 2] = 0x0d;
-               buffer[idx + 3] = 0;
-               sscanf(buffer,"{ \"T1\" : \"%f\", \"H1\" : \"%f\", \"T2\" : \"%f\", \"H2\" : \"%f\", \"CS\" : \"%d\",  \"R1\" : \"%d\", \"R2\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", &t1, &h1, &t2, &h2, &cs, &temp_ref_1, &temp_ref_2, &weight_1, &weight_2, &decrement_2, &decrement_1, &decrement_0, &increment_1, &increment_2, &increment_3, &min_speed, &scale, &delta_eq, &sample_interval);
+               buffer[idx + 1] = ',';
+               buffer[idx + 2] = ' ';
+               buffer[idx + 3] = '"';
+               buffer[idx + 4] = 'E';
+               buffer[idx + 5] = 'T';
+               buffer[idx + 6] = '"';
+               buffer[idx + 7] = ':';
+               buffer[idx + 8] = '"';
+               buffer[idx + 9] = '0';
+               buffer[idx + 10] = '0';
+               buffer[idx + 11] = '"';
+
+               buffer[idx + 13] = 0x0d;
+               buffer[idx + 14] = 0;
+               sscanf(buffer,"{ \"T1\" : \"%f\", \"H1\" : \"%f\", \"T2\" : \"%f\", \"H2\" : \"%f\", \"CS\" : \"%d\", \"R1\" : \"%d\", \"R2\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", &t1, &h1, &t2, &h2, &cs, &temp_ref_1, &temp_ref_2, &weight_1, &weight_2, &decrement_2, &decrement_1, &decrement_0, &increment_1, &increment_2, &increment_3, &min_speed, &scale, &delta_eq, &sample_interval);
+
+               sprintf(buffer,"{ \"CS\" : \"%d\", \"T1\" : \"%.2f\", \"H1\" : \"%.2f\", \"T2\" : \"%.2f\", \"H2\" : \"%.2f\", \"T3\" : \"%.2f\", \"H3\" : \"%.2f\", \"R1\" : \"%d\", \"R2\" : \"%d\", \"R3\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"W3\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", cs, t1, h1, t2, h2, t3, h3, temp_ref_1, temp_ref_2, temp_ref_3, weight_1, weight_2,weight_3, decrement_2, decrement_1, decrement_0, increment_1, increment_2, increment_3, min_speed, scale, delta_eq, sample_interval);
 
                uartWriteString( UART_USB, buffer);
 
@@ -175,12 +195,7 @@ int main( void )
                buffer[idx] = data[0];
              }
            break;
-          default:
-
-           break;
          }
-
-
       }
    }
    return 0;
