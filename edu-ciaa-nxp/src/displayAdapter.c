@@ -92,7 +92,7 @@ int main( void )
 
    lcdInit( 16, 2, 5, 8 );
 
-   dht11Init( GPIO0 ); // Inicializo el sensor DHT11
+   dht11Init( GPIO1 );
 
 
    bool ledRS232 = OFF;
@@ -114,6 +114,8 @@ int main( void )
    }
 
    uartWriteString(UART_USB,"Display Adapter V 2.0\n");
+
+
 
    lcdCursorSet( LCD_CURSOR_OFF );
    lcdClearAndHome();
@@ -169,10 +171,14 @@ int main( void )
                buffer[idx + 3] = 0;
                sscanf(buffer,"{ \"T1\" : \"%f\", \"H1\" : \"%f\", \"T2\" : \"%f\", \"H2\" : \"%f\", \"CS\" : \"%d\", \"R1\" : \"%d\", \"R2\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", &t1, &h1, &t2, &h2, &cs, &temp_ref_1, &temp_ref_2, &weight_1, &weight_2, &decrement_2, &decrement_1, &decrement_0, &increment_1, &increment_2, &increment_3, &min_speed, &scale, &delta_eq, &sample_interval);
 
-
-               if( dht11Read(&h3, &t3) ) {
-
-
+               float tmp_t3;
+               float tmp_h3;
+               if( dht11Read(&tmp_h3, &tmp_t3) ) {
+                  t3 = tmp_t3;
+                  h3 = tmp_h3;
+               } else {
+                  t3 = -1;
+                  h3 = -1;
                }
 
                sprintf(buffer,"{ \"CS\" : \"%d\", \"T1\" : \"%.2f\", \"H1\" : \"%.2f\", \"T2\" : \"%.2f\", \"H2\" : \"%.2f\", \"T3\" : \"%.2f\", \"H3\" : \"%.2f\", \"R1\" : \"%d\", \"R2\" : \"%d\", \"R3\" : \"%d\", \"W1\" : \"%d\", \"W2\" : \"%d\", \"W3\" : \"%d\", \"D2\" : \"%d\", \"D1\" : \"%d\", \"D0\" : \"%d\", \"I1\" : \"%d\", \"I2\" : \"%d\", \"I3\" : \"%d\", \"MS\" : \"%d\", \"SC\" : \"%d\", \"DE\" : \"%d\", \"SI\" : \"%d\"}", cs, t1, h1, t2, h2, t3, h3, temp_ref_1, temp_ref_2, temp_ref_3, weight_1, weight_2,weight_3, decrement_2, decrement_1, decrement_0, increment_1, increment_2, increment_3, min_speed, scale, delta_eq, sample_interval);
